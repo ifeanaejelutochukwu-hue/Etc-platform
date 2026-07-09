@@ -15,9 +15,9 @@ func main() {
 
 	pool, err := db.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
-		log.Printf("warning: database not available: %v", err)
-		pool = &db.Pool{}
+		log.Fatalf("database error: %v", err)
 	}
+	defer pool.Close()
 
 	srv := server.New(cfg, pool)
 	if err := srv.Start(); err != nil {

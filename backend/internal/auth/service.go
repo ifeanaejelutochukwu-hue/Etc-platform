@@ -2,11 +2,10 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type Service struct {
@@ -42,7 +41,7 @@ func (s *Service) VerifyOTP(ctx context.Context, phone, code string) (*AuthRespo
 	}
 
 	user, err := s.repo.FindUserByPhone(ctx, phone)
-	if err == pgx.ErrNoRows {
+	if err == sql.ErrNoRows {
 		username := "user_" + phone[len(phone)-4:]
 		user, err = s.repo.CreateUser(ctx, phone, username)
 		if err != nil {

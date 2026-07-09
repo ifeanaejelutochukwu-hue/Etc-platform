@@ -18,7 +18,7 @@ func NewRepository(pool *db.Pool) *Repository {
 func (r *Repository) SaveMessage(ctx context.Context, msg *Message) error {
 	_, err := r.pool.Exec(ctx,
 		`INSERT INTO messages (id, room_id, sender_id, reply_to, type, content, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		msg.ID, msg.RoomID, msg.SenderID, msg.ReplyTo, msg.Type, msg.Content, time.Now())
 	return err
 }
@@ -27,17 +27,17 @@ func (r *Repository) GetMessages(ctx context.Context, roomID string, beforeID *s
 	query := `SELECT m.id, m.room_id, m.sender_id, u.username, m.reply_to, m.type, m.content, m.created_at
 		 FROM messages m
 		 JOIN users u ON u.id = m.sender_id
-		 WHERE m.room_id = $1`
+		 WHERE m.room_id = ?`
 
 	var args []interface{}
 	args = append(args, roomID)
 
 	if beforeID != nil {
-		query += ` AND m.id < $2`
+		query += ` AND m.id < ?`
 		args = append(args, *beforeID)
 	}
 
-	query += ` ORDER BY m.created_at DESC LIMIT $` + string(rune(len(args)+1+'0'))
+	query += ` ORDER BY m.created_at DESC LIMIT ?`
 	args = append(args, limit)
 
 	rows, err := r.pool.Query(ctx, query, args...)

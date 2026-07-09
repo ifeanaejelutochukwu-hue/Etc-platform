@@ -23,7 +23,7 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:            getEnvInt("PORT", 8080),
-		DatabaseURL:     getEnv("DATABASE_URL", "postgres://etc:etc@localhost:5432/etc?sslmode=disable"),
+		DatabaseURL:     getEnv("DATABASE_URL", "etc.db"),
 		RedisURL:        getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		JWTSecret:       getEnv("JWT_SECRET", "dev-secret"),
 		LiveKitAPIKey:   getEnv("LIVEKIT_API_KEY", "devkey"),
