@@ -24,7 +24,7 @@ func (h *Handler) RequestOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.svc.RequestOTP(r.Context(), req.Phone); err != nil {
-		http.Error(w, `{"error":"failed to send OTP"}`, http.StatusInternalServerError)
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
