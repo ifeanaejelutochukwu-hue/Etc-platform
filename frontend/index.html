@@ -2,8 +2,94 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ETC — Easy Talk & Connect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>ETC — Easy Talk &amp; Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        /* Brand gradient — Instagram/TikTok energy */
+        --brand:        #7c3aed;
+        --brand2:       #db2777;
+        --grad:         linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+        --grad-soft:    linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(219,39,119,0.08) 100%);
+
+        /* Light surfaces */
+        --bg:           #ffffff;
+        --bg-2:         #f9fafb;
+        --bg-3:         #f3f4f6;
+        --bg-4:         #e5e7eb;
+
+        /* Chat bubble colours */
+        --bubble-out:   #7c3aed;   /* sent — brand purple */
+        --bubble-in:    #f3f4f6;   /* received — light grey */
+        --bubble-in-txt:#111827;
+
+        /* Text */
+        --txt:          #111827;
+        --txt-2:        #6b7280;
+        --txt-3:        #9ca3af;
+
+        /* Semantic */
+        --green:        #10b981;
+        --red:          #ef4444;
+        --yellow:       #f59e0b;
+
+        /* Shape */
+        --r-xs:  4px;
+        --r-sm:  8px;
+        --r-md:  12px;
+        --r-lg:  18px;
+        --r-xl:  24px;
+        --r-2xl: 32px;
+        --r-full: 9999px;
+
+        /* Motion */
+        --ease: cubic-bezier(0.4, 0, 0.2, 1);
+        --t:    0.15s var(--ease);
+        --t-md: 0.25s var(--ease);
+
+        /* Safe areas */
+        --sat: env(safe-area-inset-top, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+      }
+
+      html, body, #root {
+        height: 100%;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;
+      }
+
+      /* Thin scrollbar */
+      ::-webkit-scrollbar { width: 3px; }
+      ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 99px; }
+
+      :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+      button, input, textarea { font-family: inherit; }
+
+      /* Disable iOS zoom on double-tap */
+      * { touch-action: manipulation; }
+
+      @keyframes fadeUp   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+      @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+      @keyframes spin     { to { transform:rotate(360deg); } }
+      @keyframes floatUp  { 0% { opacity:1; transform:translateY(0) scale(1); } 100% { opacity:0; transform:translateY(-80px) scale(1.4); } }
+      @keyframes popIn    { 0% { transform:scale(0.7); opacity:0; } 70% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
+      @keyframes slidUp   { from { transform:translateY(100%); } to { transform:translateY(0); } }
+    </style>
   </head>
   <body>
     <div id="root"></div>

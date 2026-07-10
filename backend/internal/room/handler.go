@@ -52,9 +52,13 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Join(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id").(string)
+	username, _ := r.Context().Value("username").(string)
+	if username == "" {
+		username = userID
+	}
 	code := r.PathValue("code")
 
-	resp, err := h.svc.JoinRoom(r.Context(), code, userID, userID)
+	resp, err := h.svc.JoinRoom(r.Context(), code, userID, username)
 	if err != nil {
 		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
 		return

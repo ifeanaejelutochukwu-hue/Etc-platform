@@ -8,6 +8,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// timeLayouts are tried in order when parsing created_at from SQLite TEXT.
+var timeLayouts = []string{
+	time.RFC3339Nano,
+	time.RFC3339,
+	"2006-01-02T15:04:05.999999999Z07:00",
+	"2006-01-02 15:04:05.999999999-07:00",
+	"2006-01-02 15:04:05",
+}
+
 type Repository struct {
 	pool *db.Pool
 }
@@ -16,65 +25,53 @@ func NewRepository(pool *db.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r *Repository) SaveOTP(ctx context.Context, phone, code string, expiresAt time.Time) error {
-	_, err := r.pool.Exec(ctx,
-		`INSERT INTO otp_codes (phone, code, expires_at, created_at)
-		 VALUES (?, ?, ?, ?)
-		 ON CONFLICT (phone) DO UPDATE SET code = ?, expires_at = ?, created_at = ?`,
-		phone, code, expiresAt, time.Now(),
-		code, expiresAt, time.Now())
-	return err
-}
-
-func (r *Repository) VerifyOTP(ctx context.Context, phone, code string) (bool, error) {
-	var exists bool
-	err := r.pool.QueryRow(ctx,
-		`SELECT COUNT(*) > 0 FROM otp_codes
-		 WHERE phone = ? AND code = ? AND expires_at > ?`,
-		phone, code, time.Now()).Scan(&exists)
-	return exists, err
-}
-
-func (r *Repository) DeleteOTP(ctx context.Context, phone string) error {
-	_, err := r.pool.Exec(ctx, `DELETE FROM otp_codes WHERE phone = ?`, phone)
-	return err
-}
-
-func (r *Repository) FindUserByPhone(ctx context.Context, phone string) (*UserRow, error) {
+// FindByUsername returns a UserRow by username, or (nil, sql.ErrNoRows) if not found.
+func (r *Repository) FindByUsername(ctx context.Context, username string) (*UserRow, error) {
 	row := r.pool.QueryRow(ctx,
-		`SELECT id, phone, username, display_name, avatar_url, created_at
-		 FROM users WHERE phone = ?`, phone)
+		`SELECT id, username, password_hash, display_name, avatar_url, created_at
+		 FROM users WHERE username = ?`, username)
 	u := &UserRow{}
-	err := row.Scan(&u.ID, &u.Phone, &u.Username, &u.DisplayName, &u.AvatarURL, &u.CreatedAt)
+	var createdAtStr string
+	err := row.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.DisplayName, &u.AvatarURL, &createdAtStr)
 	if err != nil {
 		return nil, err
+	}
+	// Parse the TEXT timestamp stored by SQLite.
+	for _, layout := range timeLayouts {
+		if t, err := time.Parse(layout, createdAtStr); err == nil {
+			u.CreatedAt = t
+			break
+		}
 	}
 	return u, nil
 }
 
-func (r *Repository) CreateUser(ctx context.Context, phone, username string) (*UserRow, error) {
+// CreateUser inserts a new user with an already-hashed password.
+func (r *Repository) CreateUser(ctx context.Context, username, passwordHash string) (*UserRow, error) {
 	id := uuid.New().String()
-	now := time.Now()
+	now := time.Now().UTC()
+	nowStr := now.Format(time.RFC3339Nano)
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO users (id, phone, username, display_name, created_at)
+		`INSERT INTO users (id, username, password_hash, display_name, created_at)
 		 VALUES (?, ?, ?, ?, ?)`,
-		id, phone, username, username, now)
+		id, username, passwordHash, username, nowStr)
 	if err != nil {
 		return nil, err
 	}
 	return &UserRow{
-		ID:        id,
-		Phone:     phone,
-		Username:  username,
-		CreatedAt: now,
+		ID:           id,
+		Username:     username,
+		PasswordHash: passwordHash,
+		CreatedAt:    now,
 	}, nil
 }
 
+// UserRow is the internal DB representation of a user.
 type UserRow struct {
-	ID          string
-	Phone       string
-	Username    string
-	DisplayName *string
-	AvatarURL   *string
-	CreatedAt   time.Time
+	ID           string
+	Username     string
+	PasswordHash string
+	DisplayName  *string
+	AvatarURL    *string
+	CreatedAt    time.Time
 }

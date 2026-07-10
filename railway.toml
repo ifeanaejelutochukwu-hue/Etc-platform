@@ -1,0 +1,8 @@
+# Root railway.toml — monorepo config.
+# Railway will detect two services from the two sub-directories.
+# You create them manually in the Railway dashboard (see deploy guide below).
+#
+# Service 1 — backend  → root directory: backend/
+# Service 2 — frontend → root directory: frontend/
+#
+# Each service picks up its own railway.toml from its subdirectory.

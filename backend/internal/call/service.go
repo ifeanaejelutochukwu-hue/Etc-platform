@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -18,6 +19,10 @@ type Service struct {
 }
 
 func NewService(host, apiKey, apiSecret string) *Service {
+	// Ensure the host has a scheme so http.NewRequest works correctly.
+	if host != "" && !strings.HasPrefix(host, "http://") && !strings.HasPrefix(host, "https://") {
+		host = "http://" + host
+	}
 	return &Service{
 		host:      host,
 		apiKey:    apiKey,
@@ -49,7 +54,7 @@ func (s *Service) GenerateToken(identity, roomName string, canPublish bool) (str
 		},
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    s.apiKey,
-			Subject:   s.apiKey,
+			Subject:   identity,
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),

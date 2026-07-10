@@ -53,6 +53,8 @@ func (h *WSHandler) HandleMessage(client *ws.Client, msg ws.Message) {
 		h.handleMute(client, msg)
 	case "call.speaking":
 		h.handleSpeaking(client, msg)
+	case "reaction":
+		h.handleReaction(client, msg)
 	default:
 		log.Printf("unknown message type: %s", msg.Type)
 	}
@@ -337,4 +339,20 @@ func (h *WSHandler) handlePlaylistPlay(client *ws.Client, msg ws.Message) {
 func sendError(client *ws.Client, code, message string) {
 	errMsg, _ := ws.ErrorMsg(code, message)
 	client.Send <- errMsg
+}
+
+func (h *WSHandler) handleReaction(client *ws.Client, msg ws.Message) {
+	var payload struct {
+		Emoji string `json:"emoji"`
+	}
+	json.Unmarshal(msg.Payload, &payload)
+	if payload.Emoji == "" {
+		return
+	}
+	broadcast, _ := ws.NewMessage("reaction", map[string]interface{}{
+		"user_id":  client.UserID,
+		"username": client.Username,
+		"emoji":    payload.Emoji,
+	})
+	h.hub.BroadcastToRoom(client.RoomCode, broadcast)
 }

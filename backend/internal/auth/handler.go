@@ -13,39 +13,52 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-func (h *Handler) RequestOTP(w http.ResponseWriter, r *http.Request) {
-	var req OTPRequest
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
+		jsonError(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	if req.Phone == "" {
-		http.Error(w, `{"error":"phone is required"}`, http.StatusBadRequest)
+	if req.Username == "" || req.Password == "" {
+		jsonError(w, "username and password are required", http.StatusBadRequest)
 		return
 	}
-	if err := h.svc.RequestOTP(r.Context(), req.Phone); err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusInternalServerError)
+
+	resp, err := h.svc.Register(r.Context(), req.Username, req.Password)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resp)
 }
 
-func (h *Handler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
-	var req OTPVerify
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
+		jsonError(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	if req.Phone == "" || req.Code == "" {
-		http.Error(w, `{"error":"phone and code are required"}`, http.StatusBadRequest)
+	if req.Username == "" || req.Password == "" {
+		jsonError(w, "username and password are required", http.StatusBadRequest)
 		return
 	}
-	resp, err := h.svc.VerifyOTP(r.Context(), req.Phone, req.Code)
+
+	resp, err := h.svc.Login(r.Context(), req.Username, req.Password)
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusUnauthorized)
+		// 401 for wrong credentials, keeps it ambiguous
+		jsonError(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+func jsonError(w http.ResponseWriter, msg string, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }

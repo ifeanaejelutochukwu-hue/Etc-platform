@@ -106,6 +106,21 @@ func (h *Hub) BroadcastToRoom(roomCode string, msg []byte, excludeClientID ...st
 	}
 }
 
+// SendToUser sends a message to all connections belonging to a given user.
+func (h *Hub) SendToUser(userID string, msg []byte) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, client := range h.clients {
+		if client.UserID == userID {
+			select {
+			case client.Send <- msg:
+			default:
+				log.Printf("dropping message to slow client: %s", client.ID)
+			}
+		}
+	}
+}
+
 func (h *Hub) SendToClient(clientID string, msg []byte) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
